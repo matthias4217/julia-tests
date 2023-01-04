@@ -1,13 +1,16 @@
 using Printf
 
-import Pkg
+#= import Pkg
 Pkg.add("JuMP")
-Pkg.add("Ipopt")
+Pkg.add("Ipopt") =#
+
 using Ipopt, JuMP
+
+β::Real = 100
 
 #= This function takes two variables (x and y) and a parameter (alpha), and returns x^2 + y^2 + 3 * alpha =#
 function test(var_x::Real, var_y::Real, param_alpha=42.)
-    res = var_x^2 + var_y^2 + 3param_alpha
+    res = var_x^2 + var_y^2 + 3param_alpha + β
     @printf "test: var_x :       %.2f\n" var_x
     @printf "test: var_y :       %.2f\n" var_y
     @printf "test: param_alpha : %.2f\n" param_alpha
@@ -22,9 +25,9 @@ function test_wrapper((var_x, var_y), (param_alpha,))
 end
 
 function solver(o_param_alpha)
-    @printf "Begin execution\n"
+    @printf "Begin solver execution\n"
 
-    @printf "Initializing model\n"
+    @printf "Initializing model in solver\n"
     model = Model(Ipopt.Optimizer)
 
     register(model, :test, 3, test; autodiff = true)
@@ -43,6 +46,7 @@ function solver(o_param_alpha)
     @printf "Results\n"
     println("$(x) = $(JuMP.value(x))")
     println("$(y) = $(JuMP.value(y))")
+    println("var_x^2 + var_y^2 + 3*param_alpha = $(test(JuMP.value(x),JuMP.value(y),o_param_alpha))")
 end
 
 test_wrapper((763., 42.), (666.,))
